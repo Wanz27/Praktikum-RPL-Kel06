@@ -9,9 +9,13 @@ const create = async (req, res) => {
         // upload ke supabase
         if (req.file) {
             const file = req.file;
-            // const fileName = Date.now() + "-" + file.originalname;
-            const cleanName = file.originalname.replace(/\s+/g, "_");
-            const fileName = Date.now() + "-" + cleanName;
+            const ext = file.originalname.split(".").pop().replace(/[^a-zA-Z0-9]/g, "") || "jpg";
+            const cleanName = file.originalname
+                .replace(/\.[^/.]+$/, "")
+                .replace(/[^a-zA-Z0-9_\-]/g, "_")
+                .replace(/_+/g, "_")
+                .slice(0, 50);
+            const fileName = Date.now() + "-" + cleanName + "." + ext;
 
             const { error } = await supabase.storage
                 .from("reports")
@@ -74,8 +78,13 @@ const update = async (req, res) => {
 
         if (req.file) {
             const file = req.file;
-            const cleanName = file.originalname.replace(/\s+/g, "_");
-            const fileName = Date.now() + "-" + cleanName;
+            const ext = file.originalname.split(".").pop().replace(/[^a-zA-Z0-9]/g, "") || "jpg";
+            const cleanName = file.originalname
+                .replace(/\.[^/.]+$/, "")
+                .replace(/[^a-zA-Z0-9_\-]/g, "_")
+                .replace(/_+/g, "_")
+                .slice(0, 50);
+            const fileName = Date.now() + "-" + cleanName + "." + ext;
 
             const { error } = await supabase.storage
                 .from("reports")
