@@ -1,37 +1,40 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import Sidebar from '../components/sidebar';
 import { useReports } from '../hooks/useReports';
-import DashboardView from '../components/dashboard/DashboardView';
-import ProfileViews from '../components/dashboard/ProfileViews';
+import ReportListView from '../components/dashboard/ReportListView';
+import ReportDetailView from '../components/dashboard/ReportDetailView';
+import EditReportView from '../components/dashboard/EditReportView';
 import CreateReportModal from '../components/dashboard/CreateReportModal';
 import '../styles/dashboard.css';
 
-function Dashboard() {
-  const [activeView, setActiveView] = useState('beranda');
-  const [user, setUser] = useState(() => JSON.parse(localStorage.getItem('user')));
+function ReportListPage() {
+  const user = JSON.parse(localStorage.getItem('user'));
+  const navigate = useNavigate();
+  const location = useLocation();
+  const contentAreaRef = useRef(null);
+
+  const { reports, fetchReports } = useReports(user?.id);
+  const [subView, setSubView] = useState('list');
+  const [selectedReport, setSelectedReport] = useState(null);
   const [showBuatModal, setShowBuatModal] = useState(false);
   const [modalState, setModalState] = useState({ isOpen: false, title: '', message: '', onCloseAction: null });
-  const { reports, stats, fetchReports } = useReports(user?.id);
-  const contentAreaRef = useRef(null);
-  const navigate = useNavigate();
+
+  useEffect(() => {
+    fetchReports();
+    if (location.state?.selectedReport) {
+      setSelectedReport(location.state.selectedReport);
+      setSubView('detail');
+    }
+  }, []);
 
   useEffect(() => {
     if (contentAreaRef.current) contentAreaRef.current.scrollTo(0, 0);
-    if (user && activeView === 'beranda') fetchReports();
-  }, [activeView]);
+  }, [subView]);
 
-  const handleLogout = () => navigate('/');
-
-  // Intercept sidebar nav — daftar/detail go to /reports page
-  const handleSidebarNav = (viewId) => {
-    if (viewId === 'daftar' || viewId === 'detail') navigate('/reports');
-    else setActiveView(viewId);
-  };
-
-  // From beranda chevron: navigate to /reports with pre-selected report
   const handleViewDetail = (report) => {
-    navigate('/reports', { state: { selectedReport: report } });
+    setSelectedReport(report);
+    setSubView('detail');
   };
 
   const handleReportSuccess = async () => {
@@ -41,20 +44,36 @@ function Dashboard() {
       isOpen: true,
       title: 'Laporan Terkirim!',
       message: 'Laporan fasilitas Anda telah berhasil dikirim dan akan segera diproses.',
-      onCloseAction: () => navigate('/reports'),
+      onCloseAction: () => setSubView('list'),
     });
   };
 
+  const handleLogout = () => navigate('/');
+
+  const handleSidebarNav = (viewId) => {
+    if (viewId === 'beranda') navigate('/dashboard');
+    else if (viewId === 'daftar') setSubView('list');
+    else if (viewId === 'detail') setSubView(selectedReport ? 'detail' : 'list');
+    else if (viewId === 'profil') navigate('/dashboard');
+  };
+
+  const sidebarActiveView = subView === 'list' ? 'daftar' : 'detail';
+
   return (
     <div className="dashboard-layout">
-      <Sidebar activeView={activeView} setActiveView={handleSidebarNav} handleLogout={handleLogout} onBuatLaporan={() => setShowBuatModal(true)} />
+      <Sidebar
+        activeView={sidebarActiveView}
+        setActiveView={handleSidebarNav}
+        handleLogout={handleLogout}
+        onBuatLaporan={() => setShowBuatModal(true)}
+      />
 
       <div className="main-wrapper">
         <div className="topbar">
           <div className="topbar-left">
             <div className="topbar-logo-mobile">lapor.in</div>
           </div>
-          <div className="topbar-user" onClick={() => setActiveView('profil')} style={{ cursor: 'pointer' }}>
+          <div className="topbar-user" onClick={() => navigate('/dashboard')} style={{ cursor: 'pointer' }}>
             {user?.photo ? (
               <img src={user.photo} alt="avatar" style={{ width: '28px', height: '28px', borderRadius: '50%', objectFit: 'cover' }} />
             ) : (
@@ -65,24 +84,48 @@ function Dashboard() {
         </div>
 
         <div className="content-area" ref={contentAreaRef}>
-          {activeView === 'beranda' && (
-            <DashboardView
-              user={user}
+          {subView === 'list' && (
+            <ReportListView
               reports={reports}
-              stats={stats}
               onBuatLaporan={() => setShowBuatModal(true)}
               onViewDetail={handleViewDetail}
-              setActiveView={handleSidebarNav}
             />
           )}
-          {activeView === 'profil' && (
-            <ProfileViews user={user} setUser={setUser} setActiveView={setActiveView} setModalState={setModalState} />
+          {subView === 'detail' && (
+            <ReportDetailView
+              selectedReport={selectedReport}
+              user={user}
+              fetchReports={fetchReports}
+              setActiveView={(v) => {
+                if (v === 'daftar') setSubView('list');
+                else if (v === 'edit') setSubView('edit');
+                else setSubView(v);
+              }}
+              setModalState={setModalState}
+            />
+          )}
+          {subView === 'edit' && (
+            <EditReportView
+              selectedReport={selectedReport}
+              setSelectedReport={setSelectedReport}
+              fetchReports={fetchReports}
+              setActiveView={(v) => {
+                if (v === 'detail') setSubView('detail');
+                else if (v === 'daftar') setSubView('list');
+                else setSubView(v);
+              }}
+              setModalState={setModalState}
+            />
           )}
         </div>
       </div>
 
       {showBuatModal && (
-        <CreateReportModal userId={user?.id} onClose={() => setShowBuatModal(false)} onSuccess={handleReportSuccess} />
+        <CreateReportModal
+          userId={user?.id}
+          onClose={() => setShowBuatModal(false)}
+          onSuccess={handleReportSuccess}
+        />
       )}
 
       {modalState.isOpen && (
@@ -116,4 +159,4 @@ function Dashboard() {
   );
 }
 
-export default Dashboard;
+export default ReportListPage;
