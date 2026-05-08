@@ -4,6 +4,7 @@ import Home from './pages/home';
 import Login from './pages/login';
 import Register from './pages/register';
 import Dashboard from './pages/dashboard';
+import ReportListPage from './pages/reportList';
 import AdminDashboard from './pages/admindashboard';
 import './styles/style.css';
 
@@ -15,6 +16,7 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/reports" element={<ReportListPage />} />
         <Route path="/admin" element={<AdminDashboard />} />
       </Routes>
     </BrowserRouter>

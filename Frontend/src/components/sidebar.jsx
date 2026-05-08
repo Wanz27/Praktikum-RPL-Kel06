@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
+import { createPortal } from 'react-dom';
 
-function Sidebar({ activeView, setActiveView, handleLogout, role = 'user' }) {
+function Sidebar({ activeView, setActiveView, handleLogout, role = 'user', onBuatLaporan }) {
   const [showLogoutModal, setShowLogoutModal] = useState(false);
-  
+
   const userMenu = [
     { id: 'beranda', label: 'Beranda', icon: 'fas fa-border-all', activeMatch: ['beranda'] },
-    { id: 'buat', label: 'Buat Laporan', icon: 'fas fa-plus-square', activeMatch: ['buat'] },
-    { id: 'daftar', label: 'Daftar Laporan', icon: 'fas fa-list-ul', activeMatch: ['daftar'] },
+{ id: 'daftar', label: 'Daftar Laporan', icon: 'fas fa-list-ul', activeMatch: ['daftar'] },
     { id: 'detail', label: 'Detail Laporan', icon: 'far fa-file-alt', activeMatch: ['detail'] },
   ];
 
@@ -33,10 +33,10 @@ function Sidebar({ activeView, setActiveView, handleLogout, role = 'user' }) {
       
       <ul className="sidebar-menu">
         {menuItems.map(item => (
-          <li 
+          <li
             key={item.id}
-            className={`menu-item ${item.activeMatch.includes(activeView) ? 'active' : ''}`} 
-            onClick={() => setActiveView(item.id)}
+            className={`menu-item ${item.activeMatch.includes(activeView) ? 'active' : ''}`}
+            onClick={() => item.isBuat && onBuatLaporan ? onBuatLaporan() : setActiveView(item.id)}
           >
             <i className={item.icon}></i> {item.label}
           </li>
@@ -51,7 +51,7 @@ function Sidebar({ activeView, setActiveView, handleLogout, role = 'user' }) {
         </ul>
       </div>
 
-      {showLogoutModal && (
+      {showLogoutModal && createPortal(
         <div className="modal-overlay">
           <div className="modal-content" style={{ textAlign: 'center', padding: '40px', background: 'white', borderRadius: '16px', maxWidth: '400px' }}>
             <div className="modal-icon" style={{ width: '60px', height: '60px', background: '#fee2e2', color: '#b91c1c', borderRadius: '50%', display: 'flex', justifyContent: 'center', alignItems: 'center', fontSize: '1.8rem', margin: '0 auto 20px' }}>
@@ -61,21 +61,22 @@ function Sidebar({ activeView, setActiveView, handleLogout, role = 'user' }) {
             <p style={{ color: '#64748b', fontSize: '0.9rem', marginBottom: '30px' }}>
               Apakah Anda yakin ingin mengakhiri sesi Anda di lapor.in?
             </p>
-            <button 
-              className="btn-login" 
+            <button
+              className="btn-login"
               style={{ width: '100%', padding: '14px', background: '#b91c1c', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', marginBottom: '10px' }}
               onClick={handleLogout}
             >
               Keluar
             </button>
-            <button 
+            <button
               style={{ width: '100%', padding: '14px', background: 'transparent', color: '#64748b', border: 'none', cursor: 'pointer', fontWeight: '600', fontSize: '0.9rem' }}
               onClick={() => setShowLogoutModal(false)}
             >
               Batal
             </button>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );
