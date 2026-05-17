@@ -53,7 +53,7 @@ function ReportListPage() {
   const handleSidebarNav = (viewId) => {
     if (viewId === 'beranda') navigate('/dashboard');
     else if (viewId === 'daftar') setSubView('list');
-    else if (viewId === 'detail') setSubView(selectedReport ? 'detail' : 'list');
+    else if (viewId === 'detail') setSubView('detail');
     else if (viewId === 'profil') navigate('/dashboard');
   };
 
